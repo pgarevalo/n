@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Note</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --toolbar-bg: #f4f4f4;
+            --border-color: #ddd;
+            --btn-bg: #ffffff;
+            --active-tab-color: #2196F3;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1e1e1e;
+                --text-color: #d4d4d4;
+                --toolbar-bg: #2d2d2d;
+                --border-color: #444;
+                --btn-bg: #3c3c3c;
+            }
+        }
+
+        /* Full Screen / No Margins */
+        html, body { 
+            margin: 0; padding: 0; 
+            height: 100vh; width: 100vw;
+            display: flex; flex-direction: column;
+            overflow: hidden; 
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: sans-serif;
+        }
+
+        /* Tab Bar */
+        .tab-bar {
+            display: flex; background: var(--toolbar-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 4px 5px 0 5px; gap: 2px;
+        }
+
+        .tab {
+            display: flex; align-items: center; gap: 6px;
+            padding: 4px 10px; cursor: pointer;
+            border: 1px solid var(--border-color); border-bottom: none;
+            font-size: 11px; background: var(--btn-bg);
+            border-radius: 3px 3px 0 0; color: var(--text-color);
+        }
+
+        .tab.active {
+            background: var(--bg-color);
+            border-bottom: 2px solid var(--active-tab-color);
+            font-weight: bold;
+        }
+
+        .close-tab { font-size: 12px; opacity: 0.5; cursor: pointer; }
+        .close-tab:hover { opacity: 1; color: #ff4d4d; }
+
+        #add-tab-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 16px; color: var(--text-color); padding: 0 8px;
+        }
+
+        /* The Editor - Font size set back to 12px */
+        #note-area { 
+            flex: 1; width: 100%; padding: 10px; 
+            font-size: 12px; 
+            font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace;
+            border: none; outline: none; line-height: 1.5;
+            resize: none; box-sizing: border-box;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Toolbar - Font size set back to 11px */
+        .toolbar { 
+            display: flex; gap: 10px; padding: 5px 10px;
+            background: var(--toolbar-bg); border-top: 1px solid var(--border-color);
+            align-items: center; font-size: 11px;
+        }
+
+        button {
+            font-size: 11px; padding: 2px 10px; cursor: pointer;
+            background: var(--btn-bg); color: var(--text-color);
+            border: 1px solid var(--border-color); border-radius: 2px;
+        }
+
+        #status { color: #888; margin-left: auto; }
+        .tab-input { font-size: 11px; width: 60px; border: 1px solid var(--active-tab-color); outline: none; }
+    </style>
+</head>
+<body>
+    <div class="tab-bar" id="tab-bar">
+        <button id="add-tab-btn">+</button>
+    </div>
+    <textarea id="note-area" spellcheck="false" placeholder="Start typing..."></textarea>
+    <div class="toolbar">
+        <input type="file" id="file-input" accept=".txt" style="display: none;">
+        <button id="open-btn">Open File</button>
+        <button id="download-btn">Save As...</button>
+        <span id="status">Auto-saved</span>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
