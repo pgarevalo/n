@@ -8,32 +8,73 @@ const downloadBtn = document.getElementById('download-btn');
 const openBtn = document.getElementById('open-btn');
 const fileInput = document.getElementById('file-input');
 const statusText = document.getElementById('status');
+const themeBtn = document.getElementById('theme-btn');
+const fontSizeSelect = document.getElementById('font-size'); // New Selector
 
 // 1. INITIALIZE
-chrome.storage.local.get(['allNotes', 'lastActiveId'], (data) => {
+// Added 'fontSize' to the retrieval list
+chrome.storage.local.get(['allNotes', 'lastActiveId', 'theme', 'fontSize'], (data) => {
     notes = data.allNotes || [{ id: Date.now(), title: 'Note 1', content: '' }];
     activeNoteId = data.lastActiveId || notes[0].id;
+
+    // --- THEME INITIALIZATION ---
+    let currentTheme = data.theme;
+    if (!currentTheme) {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            currentTheme = 'dark';
+        } else {
+            currentTheme = 'light';
+        }
+    }
+    applyTheme(currentTheme);
+
+    // --- FONT SIZE INITIALIZATION ---
+    const savedFontSize = data.fontSize || '12px';
+    noteArea.style.fontSize = savedFontSize;
+    fontSizeSelect.value = savedFontSize;
+
     renderTabs();
     loadActiveNote();
 });
 
+// --- THEME LOGIC ---
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeBtn.textContent = "Light Mode";
+    } else {
+        document.body.classList.remove('dark-mode');
+        themeBtn.textContent = "Dark Mode";
+    }
+}
+
+themeBtn.onclick = () => {
+    const isDark = document.body.classList.contains('dark-mode');
+    const newTheme = isDark ? 'light' : 'dark';
+    applyTheme(newTheme);
+    chrome.storage.local.set({ theme: newTheme });
+};
+
+// --- FONT SIZE LOGIC ---
+fontSizeSelect.onchange = () => {
+    const size = fontSizeSelect.value;
+    noteArea.style.fontSize = size;
+    chrome.storage.local.set({ fontSize: size });
+};
+
 // 2. RENDER TABS
 function renderTabs() {
-    // 1. Clear existing tabs (keeping the + button)
     tabBar.querySelectorAll('.tab').forEach(t => t.remove());
 
     notes.forEach(note => {
         const tab = document.createElement('div');
         tab.className = `tab ${note.id === activeNoteId ? 'active' : ''}`;
         
-        // The title container
         const titleSpan = document.createElement('span');
         titleSpan.textContent = note.title;
         
-        // ATTACH RENAME HERE
         titleSpan.addEventListener('dblclick', (e) => {
-            e.stopPropagation(); // Prevents the tab from just switching
-            console.log("Renaming note:", note.id); // Check if this shows in Console
+            e.stopPropagation(); 
             renameTab(note.id, titleSpan);
         });
 
@@ -55,8 +96,6 @@ function renderTabs() {
 
 // 3. TAB ACTIONS
 function switchTab(id) {
-    // FIX: If we are already on this tab, stop here. 
-    // This prevents re-rendering the DOM, keeping the element alive for the double-click event.
     if (activeNoteId === id) return; 
 
     saveCurrentNote();
