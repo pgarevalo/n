@@ -9,26 +9,18 @@ const openBtn = document.getElementById('open-btn');
 const fileInput = document.getElementById('file-input');
 const statusText = document.getElementById('status');
 const themeBtn = document.getElementById('theme-btn');
-const fontSizeSelect = document.getElementById('font-size'); // New Selector
+const fontSizeSelect = document.getElementById('font-size');
 
 // 1. INITIALIZE
-// Added 'fontSize' to the retrieval list
 chrome.storage.local.get(['allNotes', 'lastActiveId', 'theme', 'fontSize'], (data) => {
     notes = data.allNotes || [{ id: Date.now(), title: 'Note 1', content: '' }];
     activeNoteId = data.lastActiveId || notes[0].id;
 
-    // --- THEME INITIALIZATION ---
-    let currentTheme = data.theme;
-    if (!currentTheme) {
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            currentTheme = 'dark';
-        } else {
-            currentTheme = 'light';
-        }
-    }
+    // Theme setup
+    let currentTheme = data.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     applyTheme(currentTheme);
 
-    // --- FONT SIZE INITIALIZATION ---
+    // Font size setup
     const savedFontSize = data.fontSize || '12px';
     noteArea.style.fontSize = savedFontSize;
     fontSizeSelect.value = savedFontSize;
@@ -37,7 +29,7 @@ chrome.storage.local.get(['allNotes', 'lastActiveId', 'theme', 'fontSize'], (dat
     loadActiveNote();
 });
 
-// --- THEME LOGIC ---
+// --- UI HELPERS ---
 function applyTheme(theme) {
     if (theme === 'dark') {
         document.body.classList.add('dark-mode');
@@ -55,16 +47,21 @@ themeBtn.onclick = () => {
     chrome.storage.local.set({ theme: newTheme });
 };
 
-// --- FONT SIZE LOGIC ---
 fontSizeSelect.onchange = () => {
     const size = fontSizeSelect.value;
     noteArea.style.fontSize = size;
     chrome.storage.local.set({ fontSize: size });
 };
 
-// 2. RENDER TABS
+// 2. RENDER TABS (With Fix for NotFoundError)
 function renderTabs() {
-    tabBar.querySelectorAll('.tab').forEach(t => t.remove());
+    // Robustly remove existing tabs by checking parent-child relationship
+    const existingTabs = tabBar.querySelectorAll('.tab');
+    existingTabs.forEach(t => {
+        if (t.parentNode === tabBar) {
+            tabBar.removeChild(t);
+        }
+    });
 
     notes.forEach(note => {
         const tab = document.createElement('div');
@@ -97,13 +94,13 @@ function renderTabs() {
 // 3. TAB ACTIONS
 function switchTab(id) {
     if (activeNoteId === id) return; 
-
     saveCurrentNote();
     activeNoteId = id;
     loadActiveNote();
     renderTabs();
     saveAllData();
 }
+
 function loadActiveNote() {
     const note = notes.find(n => n.id === activeNoteId);
     noteArea.value = note ? note.content : '';
@@ -111,9 +108,7 @@ function loadActiveNote() {
 
 function saveCurrentNote() {
     const note = notes.find(n => n.id === activeNoteId);
-    if (note) {
-        note.content = noteArea.value;
-    }
+    if (note) note.content = noteArea.value;
 }
 
 function saveAllData() {
@@ -137,6 +132,7 @@ function deleteTab(id) {
     }
 }
 
+// Fix for Blur/Render Race Condition
 function renameTab(id, element) {
     const note = notes.find(n => n.id === id);
     const input = document.createElement('input');
@@ -147,10 +143,11 @@ function renameTab(id, element) {
     input.focus();
     input.select();
 
+    let finished = false;
     const finish = () => {
-        if (input.value.trim() !== "") {
-            note.title = input.value;
-        }
+        if (finished) return;
+        finished = true;
+        if (input.value.trim() !== "") note.title = input.value;
         renderTabs();
         saveAllData();
     };
@@ -158,7 +155,7 @@ function renameTab(id, element) {
     input.onblur = finish;
     input.onkeydown = (e) => {
         if (e.key === 'Enter') finish();
-        if (e.key === 'Escape') renderTabs();
+        if (e.key === 'Escape') { finished = true; renderTabs(); }
     };
 }
 
@@ -170,7 +167,7 @@ noteArea.addEventListener('input', () => {
     setTimeout(() => statusText.textContent = "Auto-saved", 500);
 });
 
-// 5. FILE IO (Save As & Open)
+// 5. FILE IO
 downloadBtn.addEventListener('click', async () => {
     if ('showSaveFilePicker' in window) {
         try {
