@@ -19,14 +19,11 @@
 
 ## 🚀 Installation
 
-Since this extension is in development, you can install it manually in Chrome:
-
-1. **Download/Clone** this repository to your local machine.
-2. Open Google Chrome and navigate to `chrome://extensions/`.
-3. Enable **"Developer mode"** using the toggle in the top-right corner.
-4. Click the **"Load unpacked"** button.
-5. Select the folder containing the extension files (where `manifest.json` is located).
-6. The **N** icon will now appear in your extension toolbar.
+1. Open Google Chrome and navigate to the extension [website](https://chromewebstore.google.com/detail/n/fofdgmnmjnnlgkhnocpgcmdogcfaihcm).
+2. Click the **"Add to Chrome"** button.
+3. Navigate to `chrome://extensions/`.
+5. Go to the N extension and click the **"Details"** button.
+6. Enable the 'Pin to toolbar' option to have access to the **N** icon in your extension toolbar.
 
 ## 🛠️ Usage
 
